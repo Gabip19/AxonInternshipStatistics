@@ -1,11 +1,14 @@
 package axon.statistics.processor;
 
 import axon.statistics.domain.Applicant;
+import axon.statistics.domain.BonusSubmissionComparator;
 import axon.statistics.domain.Submission;
 import axon.statistics.processor.validator.LineDataValidator;
 import axon.statistics.processor.validator.Validator;
 
 import java.io.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -14,33 +17,43 @@ import java.util.*;
 public class ApplicantsProcessor {
     private final HashMap<String, Submission> submissions = new HashMap<>();
     private final Validator<String> lineDataValidator = new LineDataValidator();
+    private final Comparator<Submission> topSubmissionComparator = new BonusSubmissionComparator();
 
     public String processApplicants(InputStream csvStream) {
         loadSubmissions(csvStream);
 
         int uniqueApplicants = getUniqueApplicantsNum();
-        System.out.println(uniqueApplicants);
 
         applyScoreAdjustments();
         List<Applicant> topApplicants = getTopApplicants(3);
 
+        int topNumber = submissions.size() / 2;
+        if (submissions.size() % 2 == 1) {
+            topNumber += 1;
+        }
+
+        double averageScore = getTopAverageScore(topNumber);
+        BigDecimal bd = new BigDecimal(averageScore).setScale(2, RoundingMode.HALF_UP);
+        averageScore = bd.doubleValue();
+
+        System.out.println(uniqueApplicants);
+        topApplicants.forEach(x -> System.out.println(x.getLastName()));
+        System.out.println(averageScore);
+
         return "";
+    }
+
+    private double getTopAverageScore(int topNumber) {
+        PriorityQueue<Submission> topSubmissions = getTopSubmissions(topNumber, (o1, o2) ->
+                Float.compare(o1.getInitialScore(), o2.getInitialScore()));
+
+        return topSubmissions.stream().mapToDouble(Submission::getInitialScore).average().orElse(0);
     }
 
     private List<Applicant> getTopApplicants(int topNumber) {
         topNumber = Math.min(topNumber, submissions.size());
 
-        Comparator<Submission> comparator = (first, second) -> {
-            if (first.getCurrentScore() == second.getCurrentScore()) {
-                if (first.getInitialScore() == second.getInitialScore()) {
-                    if (first.getDeliveryTime().equals(second.getDeliveryTime())) {
-                        return second.getApplicant().getEmail().compareTo(first.getApplicant().getEmail());
-                    } else return second.getDeliveryTime().compareTo(first.getDeliveryTime());
-                } else return Float.compare(first.getInitialScore(), second.getInitialScore());
-            } return Float.compare(first.getCurrentScore(), second.getCurrentScore());
-        };
-
-        PriorityQueue<Submission> topSubmissions = getTopSubmissions(topNumber, comparator);
+        PriorityQueue<Submission> topSubmissions = getTopSubmissions(topNumber, topSubmissionComparator);
 
         ArrayList<Applicant> topApplicants = new ArrayList<>();
         while (!topSubmissions.isEmpty()) {
@@ -68,6 +81,7 @@ public class ApplicantsProcessor {
                 topSubmissions.offer(currentValue);
             }
         }
+
         return topSubmissions;
     }
 
