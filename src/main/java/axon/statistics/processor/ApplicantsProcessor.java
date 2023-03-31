@@ -40,6 +40,18 @@ public class ApplicantsProcessor {
             } return Float.compare(first.getCurrentScore(), second.getCurrentScore());
         };
 
+        PriorityQueue<Submission> topSubmissions = getTopSubmissions(topNumber, comparator);
+
+        ArrayList<Applicant> topApplicants = new ArrayList<>();
+        while (!topSubmissions.isEmpty()) {
+            topApplicants.add(topSubmissions.poll().getApplicant());
+        }
+        Collections.reverse(topApplicants);
+
+        return topApplicants;
+    }
+
+    private PriorityQueue<Submission> getTopSubmissions(int topNumber, Comparator<Submission> comparator) {
         PriorityQueue<Submission> topSubmissions = new PriorityQueue<>(topNumber, comparator);
 
         // Add the first topNumber values to the queue
@@ -56,13 +68,7 @@ public class ApplicantsProcessor {
                 topSubmissions.offer(currentValue);
             }
         }
-        ArrayList<Applicant> topApplicants = new ArrayList<>();
-        while (!topSubmissions.isEmpty()) {
-            topApplicants.add(topSubmissions.poll().getApplicant());
-        }
-        Collections.reverse(topApplicants);
-
-        return topApplicants;
+        return topSubmissions;
     }
 
     private void applyScoreAdjustments() {
