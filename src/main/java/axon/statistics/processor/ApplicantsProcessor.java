@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -19,8 +20,18 @@ import java.util.*;
 
 public class ApplicantsProcessor {
     private final HashMap<String, Submission> submissions = new HashMap<>();
-    private final Validator<String> lineDataValidator = new LineDataValidator();
-    private final Comparator<Submission> topSubmissionComparator = new BonusSubmissionComparator();
+    private final Validator<String> lineDataValidator;
+    private final Comparator<Submission> topSubmissionComparator;
+
+    public ApplicantsProcessor() {
+        lineDataValidator = new LineDataValidator();
+        topSubmissionComparator = new BonusSubmissionComparator();
+    }
+
+    public ApplicantsProcessor(Validator<String> lineDataValidator, Comparator<Submission> topSubmissionComparator) {
+        this.lineDataValidator = lineDataValidator;
+        this.topSubmissionComparator = topSubmissionComparator;
+    }
 
     public String processApplicants(InputStream csvStream) {
         loadSubmissions(csvStream);
@@ -37,9 +48,7 @@ public class ApplicantsProcessor {
 
         double averageScore = getTopAverageScore(topNumber);
 
-        String statisticsJsonFormat = formatForJson(uniqueApplicants, topApplicants, averageScore);
-
-        return statisticsJsonFormat;
+        return formatForJson(uniqueApplicants, topApplicants, averageScore);
     }
 
     private String formatForJson(int uniqueApplicants, List<Applicant> topApplicants, double averageScore) {
@@ -51,7 +60,6 @@ public class ApplicantsProcessor {
         System.out.println(gsonPretty.toJson(jsonData));
 
         Gson gson = new Gson();
-
         return gson.toJson(jsonData);
     }
 
@@ -83,6 +91,9 @@ public class ApplicantsProcessor {
     }
 
     private PriorityQueue<Submission> getTopSubmissions(int topNumber, Comparator<Submission> comparator) {
+        if (topNumber < 1) {
+            return new PriorityQueue<>();
+        }
         PriorityQueue<Submission> topSubmissions = new PriorityQueue<>(topNumber, comparator);
 
         // Add the first topNumber values to the queue
@@ -152,11 +163,13 @@ public class ApplicantsProcessor {
     }
 
     private void loadSubmissions(InputStream csvStream) {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(csvStream))) {
+        try (BufferedReader bufferedReader = new BufferedReader(
+            new InputStreamReader(csvStream, StandardCharsets.UTF_8))
+        ) {
             String currentLine;
             while ((currentLine = bufferedReader.readLine()) != null) {
                 String[] lineData = currentLine.split(",");
-//                System.out.println(lineData[0]);
+                System.out.println(lineData[0]);
                 if (hasValidFormat(lineData)) {
                     Submission submission = extractSubmission(lineData);
                     submissions.put(submission.getApplicant().getEmail(), submission);
