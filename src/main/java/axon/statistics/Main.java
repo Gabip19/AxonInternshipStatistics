@@ -10,6 +10,9 @@ import java.io.FileNotFoundException;
 
 public class Main {
     public static void main(String[] args) {
+        // !!! PRINTING NAMES TO CONSOLE REPLACES UNICODE CHARACTERS WITH ? BUT STRINGS ARE STILL INTACT !!!
+        // DON'T KNOW HOW TO FIX IT YET :(
+
         ApplicantsProcessor processor = new ApplicantsProcessor(
                 new CsvSubmissionLoader(new LineDataValidator()),
                 new BonusSubmissionComparator()

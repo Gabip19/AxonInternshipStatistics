@@ -2,13 +2,10 @@ package axon.statistics.processor;
 
 import axon.statistics.domain.Applicant;
 import axon.statistics.domain.BonusSubmissionComparator;
-import axon.statistics.domain.JSONDataHolder;
 import axon.statistics.domain.Submission;
 import axon.statistics.processor.dataloader.CsvSubmissionLoader;
 import axon.statistics.processor.dataloader.SubmissionLoader;
 import axon.statistics.processor.validator.LineDataValidator;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -47,19 +44,7 @@ public class ApplicantsProcessor {
 
         double averageScore = getTopAverageScore(topNumber);
 
-        return formatForJson(uniqueApplicants, topApplicants, averageScore);
-    }
-
-    private String formatForJson(int uniqueApplicants, List<Applicant> topApplicants, double averageScore) {
-        List<String> topApplicantsLastNames = topApplicants.stream()
-                .map(Applicant::getLastName).toList();
-
-        JSONDataHolder jsonData = new JSONDataHolder(uniqueApplicants, topApplicantsLastNames, averageScore);
-        Gson gsonPretty = new GsonBuilder().setPrettyPrinting().create();
-        System.out.println(gsonPretty.toJson(jsonData));
-
-        Gson gson = new Gson();
-        return gson.toJson(jsonData);
+        return JSONFormatter.formatToJson(uniqueApplicants, topApplicants, averageScore);
     }
 
     private double getTopAverageScore(int topNumber) {
