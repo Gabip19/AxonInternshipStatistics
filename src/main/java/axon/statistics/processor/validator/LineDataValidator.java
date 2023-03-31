@@ -1,12 +1,14 @@
 package axon.statistics.processor.validator;
 
+import axon.statistics.config.Constants;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LineDataValidator implements Validator<String> {
     @Override
     public void validate(String[] data) {
-        if (data.length != 4) {
+        if (data.length != Constants.LINE_FIELDS_NUMBER) {
             throw new IllegalArgumentException("Invalid data length.\n");
         }
 
@@ -17,16 +19,13 @@ public class LineDataValidator implements Validator<String> {
     }
 
     private void validateName(String fullName) {
-        String regex = "^([A-Z\\p{Lu}][a-z\\p{Ll}]+[ -])+[A-Z\\p{Lu}][a-z\\p{Ll}]+$";
+        String regex = Constants.NAME_REGEX;
         Pattern pVar = Pattern.compile(regex, Pattern.UNICODE_CHARACTER_CLASS);
         Matcher matcher = pVar.matcher(fullName);
         var matches = matcher.matches();
         if (!matches) {
             throw new IllegalArgumentException("Invalid name format.");
         }
-//        if (!fullName.matches("^([A-ZȘȚÎĂÂ][a-zăâîşșț]+[ -])+[A-ZȘȚÎĂÂ][a-zăâîşșț]+$")) {
-//            throw new IllegalArgumentException("Invalid name format.");
-//        }
     }
 
     private void validateEmail(String email) {

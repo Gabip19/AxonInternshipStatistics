@@ -29,7 +29,6 @@ public class CsvSubmissionLoader implements SubmissionLoader {
             String currentLine;
             while ((currentLine = bufferedReader.readLine()) != null) {
                 String[] lineData = currentLine.split(",");
-                System.out.println(lineData[0]);
                 if (hasValidFormat(lineData)) {
                     Submission submission = extractSubmission(lineData);
                     submissions.put(submission.getApplicant().getEmail(), submission);

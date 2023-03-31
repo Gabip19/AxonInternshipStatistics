@@ -1,5 +1,6 @@
 package axon.statistics.processor;
 
+import axon.statistics.config.Constants;
 import axon.statistics.domain.Applicant;
 import axon.statistics.domain.BonusSubmissionComparator;
 import axon.statistics.domain.Submission;
@@ -35,7 +36,7 @@ public class ApplicantsProcessor {
         int uniqueApplicants = getUniqueApplicantsNum();
 
         applyScoreAdjustments();
-        List<Applicant> topApplicants = getTopApplicants(3);
+        List<Applicant> topApplicants = getTopApplicants(Constants.TOP_NUMBER);
 
         int topNumber = submissions.size() / 2;
         if (submissions.size() % 2 == 1) {
