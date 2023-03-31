@@ -3,7 +3,7 @@ package axon.statistics.processor.validator;
 public class LineDataValidator implements Validator<String> {
     @Override
     public void validate(String[] data) {
-        if (data.length != 4) { // TODO: 03/31/23 constant
+        if (data.length != 4) {
             throw new IllegalArgumentException("Invalid data length.\n");
         }
 

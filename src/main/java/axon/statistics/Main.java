@@ -11,7 +11,8 @@ public class Main {
         String filePath = Main.class.getResource("/submissions.csv").getFile();
         filePath = filePath.replace("%20", " ");
         try {
-            processor.processApplicants(new FileInputStream(filePath));
+            String jsonResult = processor.processApplicants(new FileInputStream(filePath));
+            System.out.println(jsonResult);
         } catch (FileNotFoundException e) {
             System.out.println("File not found. Try placing it in the resources folder.");
         }

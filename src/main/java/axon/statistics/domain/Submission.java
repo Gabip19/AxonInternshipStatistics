@@ -16,7 +16,7 @@ public class Submission {
     }
 
     public void addBonus(float bonus) {
-        //TODO ?? should the score stay in the [0 10] interval after applying the bonus ??
+        // ?? should the score stay in the [0 10] interval after applying the bonus ??
         currentScore += bonus;
     }
 

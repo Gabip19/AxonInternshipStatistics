@@ -2,9 +2,12 @@ package axon.statistics.processor;
 
 import axon.statistics.domain.Applicant;
 import axon.statistics.domain.BonusSubmissionComparator;
+import axon.statistics.domain.JSONDataHolder;
 import axon.statistics.domain.Submission;
 import axon.statistics.processor.validator.LineDataValidator;
 import axon.statistics.processor.validator.Validator;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -33,21 +36,36 @@ public class ApplicantsProcessor {
         }
 
         double averageScore = getTopAverageScore(topNumber);
-        BigDecimal bd = new BigDecimal(averageScore).setScale(2, RoundingMode.HALF_UP);
-        averageScore = bd.doubleValue();
 
-        System.out.println(uniqueApplicants);
-        topApplicants.forEach(x -> System.out.println(x.getLastName()));
-        System.out.println(averageScore);
+        String statisticsJsonFormat = formatForJson(uniqueApplicants, topApplicants, averageScore);
 
-        return "";
+        return statisticsJsonFormat;
+    }
+
+    private String formatForJson(int uniqueApplicants, List<Applicant> topApplicants, double averageScore) {
+        List<String> topApplicantsLastNames = topApplicants.stream()
+                .map(Applicant::getLastName).toList();
+
+        JSONDataHolder jsonData = new JSONDataHolder(uniqueApplicants, topApplicantsLastNames, averageScore);
+        Gson gsonPretty = new GsonBuilder().setPrettyPrinting().create();
+        System.out.println(gsonPretty.toJson(jsonData));
+
+        Gson gson = new Gson();
+
+        return gson.toJson(jsonData);
     }
 
     private double getTopAverageScore(int topNumber) {
         PriorityQueue<Submission> topSubmissions = getTopSubmissions(topNumber, (o1, o2) ->
                 Float.compare(o1.getInitialScore(), o2.getInitialScore()));
 
-        return topSubmissions.stream().mapToDouble(Submission::getInitialScore).average().orElse(0);
+        double averageScore = topSubmissions.stream()
+                .mapToDouble(Submission::getInitialScore)
+                .average()
+                .orElse(0);
+
+        BigDecimal bd = new BigDecimal(averageScore).setScale(2, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 
     private List<Applicant> getTopApplicants(int topNumber) {
@@ -137,7 +155,7 @@ public class ApplicantsProcessor {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(csvStream))) {
             String currentLine;
             while ((currentLine = bufferedReader.readLine()) != null) {
-                String[] lineData = currentLine.split(","); // TODO: 03/31/23 line data separator
+                String[] lineData = currentLine.split(",");
 //                System.out.println(lineData[0]);
                 if (hasValidFormat(lineData)) {
                     Submission submission = extractSubmission(lineData);
@@ -153,8 +171,8 @@ public class ApplicantsProcessor {
         try {
             lineDataValidator.validate(lineData);
             return true;
-        } catch (IllegalArgumentException e) { // TODO: 03/31/23 change
-            System.err.println("Invalid line format found: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+//            System.err.println("Invalid line format found: " + e.getMessage());
         }
         return false;
     }
