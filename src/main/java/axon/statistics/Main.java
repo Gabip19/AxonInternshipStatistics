@@ -2,6 +2,7 @@ package axon.statistics;
 
 import axon.statistics.domain.BonusSubmissionComparator;
 import axon.statistics.processor.ApplicantsProcessor;
+import axon.statistics.processor.dataloader.CsvSubmissionLoader;
 import axon.statistics.processor.validator.LineDataValidator;
 
 import java.io.FileInputStream;
@@ -10,7 +11,7 @@ import java.io.FileNotFoundException;
 public class Main {
     public static void main(String[] args) {
         ApplicantsProcessor processor = new ApplicantsProcessor(
-                new LineDataValidator(),
+                new CsvSubmissionLoader(new LineDataValidator()),
                 new BonusSubmissionComparator()
         );
 

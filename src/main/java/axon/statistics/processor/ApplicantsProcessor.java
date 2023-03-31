@@ -4,37 +4,36 @@ import axon.statistics.domain.Applicant;
 import axon.statistics.domain.BonusSubmissionComparator;
 import axon.statistics.domain.JSONDataHolder;
 import axon.statistics.domain.Submission;
+import axon.statistics.processor.dataloader.CsvSubmissionLoader;
+import axon.statistics.processor.dataloader.SubmissionLoader;
 import axon.statistics.processor.validator.LineDataValidator;
-import axon.statistics.processor.validator.Validator;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
 public class ApplicantsProcessor {
-    private final HashMap<String, Submission> submissions = new HashMap<>();
-    private final Validator<String> lineDataValidator;
+    private HashMap<String, Submission> submissions = new HashMap<>();
+    private final SubmissionLoader submissionLoader;
     private final Comparator<Submission> topSubmissionComparator;
 
     public ApplicantsProcessor() {
-        lineDataValidator = new LineDataValidator();
+        submissionLoader = new CsvSubmissionLoader(new LineDataValidator());
         topSubmissionComparator = new BonusSubmissionComparator();
     }
 
-    public ApplicantsProcessor(Validator<String> lineDataValidator, Comparator<Submission> topSubmissionComparator) {
-        this.lineDataValidator = lineDataValidator;
+    public ApplicantsProcessor(SubmissionLoader submissionLoader, Comparator<Submission> topSubmissionComparator) {
+        this.submissionLoader = submissionLoader;
         this.topSubmissionComparator = topSubmissionComparator;
     }
 
     public String processApplicants(InputStream csvStream) {
-        loadSubmissions(csvStream);
+        submissions = submissionLoader.loadSubmissions(csvStream);
 
         int uniqueApplicants = getUniqueApplicantsNum();
 
@@ -160,40 +159,5 @@ public class ApplicantsProcessor {
 
     private int getUniqueApplicantsNum() {
         return submissions.size();
-    }
-
-    private void loadSubmissions(InputStream csvStream) {
-        try (BufferedReader bufferedReader = new BufferedReader(
-            new InputStreamReader(csvStream, StandardCharsets.UTF_8))
-        ) {
-            String currentLine;
-            while ((currentLine = bufferedReader.readLine()) != null) {
-                String[] lineData = currentLine.split(",");
-                System.out.println(lineData[0]);
-                if (hasValidFormat(lineData)) {
-                    Submission submission = extractSubmission(lineData);
-                    submissions.put(submission.getApplicant().getEmail(), submission);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private boolean hasValidFormat(String[] lineData) {
-        try {
-            lineDataValidator.validate(lineData);
-            return true;
-        } catch (IllegalArgumentException e) {
-//            System.err.println("Invalid line format found: " + e.getMessage());
-        }
-        return false;
-    }
-
-    private Submission extractSubmission(String[] lineData) {
-        Applicant applicant = new Applicant(lineData[0].split(" "), lineData[1]);
-        LocalDateTime deliverTime = LocalDateTime.parse(lineData[2]);
-        float score = Float.parseFloat(lineData[3]);
-        return new Submission(applicant, deliverTime, score);
     }
 }
